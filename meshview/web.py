@@ -18,7 +18,7 @@ from markupsafe import Markup
 
 from meshtastic.protobuf.mesh_pb2 import Routing
 from meshtastic.protobuf.portnums_pb2 import PortNum
-from meshview import config, database, decode_payload, migrations, models, store, traceroute
+from meshview import config, database, decode_payload, migrations, models, monday, store, traceroute
 from meshview.__version__ import (
     __version_string__,
 )
@@ -356,6 +356,34 @@ async def stats(request):
     return web.Response(
         text=template.render(),
         content_type="text/html",
+    )
+
+
+@routes.get("/monday")
+@routes.get("/monday.html")
+async def meshtastic_monday(request):
+    summary = await monday.get_summary(CONFIG.get('meshtastic_monday', {}))
+    page_size = 50
+    page_count = max(1, (len(summary['messages']) + page_size - 1) // page_size)
+    leaderboard_pages = max(1, (len(summary['leaderboard']) + 19) // 20)
+    try:
+        page = min(max(1, int(request.query.get('page', '1'))), page_count)
+        leaderboard_page = min(
+            max(1, int(request.query.get('leaderboard_page', '1'))), leaderboard_pages
+        )
+    except ValueError:
+        raise web.HTTPBadRequest(text='Invalid page number') from None
+    return web.Response(
+        text=env.get_template('monday.html').render(
+            monday=summary,
+            page=page,
+            page_count=page_count,
+            messages=summary['messages'][(page - 1) * page_size : page * page_size],
+            leaderboard=summary['leaderboard'][(leaderboard_page - 1) * 20 : leaderboard_page * 20],
+            leaderboard_page=leaderboard_page,
+            leaderboard_pages=leaderboard_pages,
+        ),
+        content_type='text/html',
     )
 
 

@@ -4,6 +4,10 @@
 
 The project serves as a real-time monitoring and diagnostic tool for the Meshtastic mesh network. It provides detailed insights into network activity, including message traffic, node positions, and telemetry data.
 
+### Local extension: #MeshtasticMonday
+
+Weekly check-ins, a leaderboard and streaks using the existing packet history and Meshview theme. See [configuration and local review](docs/Meshtastic-Monday.md).
+
 ### Version 4.0.0 — November 2026
 
 - Interface: redesigned the dashboard, maps, chat, node directory, packet inspector, and reports, with a shared day/night theme and improved mobile layouts.

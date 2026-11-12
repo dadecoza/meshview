@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block theme %}light{% endblock %}
+{% block body_class %}mesh-data-page mesh-monday-page{% endblock %}
+{% block css %}{% include "data-page-styles.html" %}{% endblock %}
+
+{% block body %}
+{% set monday = monday|default({}) %}
+{% set messages = messages|default([]) %}
+{% set page = page|default(1) %}
+{% set page_count = page_count|default(1) %}
+{% set leaderboard = leaderboard|default([]) %}
+{% set leaderboard_page = leaderboard_page|default(1) %}
+{% set leaderboard_pages = leaderboard_pages|default(1) %}
+<header class="data-heading">
+    <div>
+        <span class="mesh-eyebrow">{{ tr("WEEKLY CHECK-INS") }}</span>
+        <h1>#MeshtasticMonday</h1>
+        <p>{{ tr("Check in on Monday, build your streak, and keep the mesh active.") }}</p>
+    </div>
+    <a class="mesh-secondary-button" href="/monday">{{ tr("Refresh") }}</a>
+</header>
+
+<div class="data-toolbar">
+    <div>
+        <strong>{{ tr("How to join") }}</strong>
+        <p class="mb-1">{{ tr("On Monday, send a broadcast message containing #MeshtasticMonday. LongFast is the usual meeting place; enable OK to MQTT so your check-in can reach this site.") }}</p>
+        <small class="text-body-secondary">{{ tr("One check-in per node per Monday. Dates use") }} {{ monday.timezone|default('Africa/Johannesburg') }}.</small>
+    </div>
+</div>
+
+<section class="mesh-metrics" aria-label="{{ tr("Monday activity") }}">
+    <div class="mesh-metric"><span>{{ tr("Participants") }}</span><strong>{{ monday.participants|default(0) }}</strong><small>{{ tr("Across retained history") }}</small></div>
+    <div class="mesh-metric"><span>{{ tr("Weekly check-ins") }}</span><strong>{{ monday.total_check_ins|default(0) }}</strong><small>{{ tr("Repeated messages count once") }}</small></div>
+    <div class="mesh-metric"><span>{{ tr("Latest Monday") }}</span><strong>{{ monday.latest_participants|default(0) }}</strong><small>{{ monday.latest_monday or tr("No check-ins yet") }}</small></div>
+    <div class="mesh-metric"><span>{{ tr("Longest streak") }}</span><strong>{{ (monday.leaderboard|default([])|map(attribute='best_streak')|max)|default(0) }}</strong><small>{{ tr("Consecutive Mondays") }}</small></div>
+</section>
+
+<h2 class="h5">{{ tr("Leaderboard") }}</h2>
+<p class="small text-body-secondary">{{ tr("Ranked by total weekly check-ins, then streak. Current streaks end on the latest Monday with a check-in anywhere on this site.") }}</p>
+<div class="data-table-wrap" role="region" aria-label="{{ tr("Monday leaderboard") }}" tabindex="0">
+    <table>
+        <thead><tr>
+            <th scope="col">{{ tr("Rank") }}</th><th scope="col">{{ tr("Node") }}</th>
+            <th scope="col">{{ tr("Weekly check-ins") }}</th><th scope="col">{{ tr("Current streak") }}</th>
+            <th scope="col">{{ tr("Best streak") }}</th><th scope="col">{{ tr("Last check-in") }}</th>
+        </tr></thead>
+        <tbody>
+        {% for node in leaderboard %}
+            <tr>
+                <td>{{ (leaderboard_page - 1) * 20 + loop.index }}</td>
+                <td><a href="/node/{{ node.node_id }}">{{ node.long_name }}</a>{% if node.short_name %} <small class="text-body-secondary">({{ node.short_name }})</small>{% endif %}</td>
+                <td>{{ node.check_ins }}</td><td>{{ node.streak }}</td>
+                <td>{{ node.best_streak }}</td><td>{{ node.last_monday }}</td>
+            </tr>
+        {% else %}
+            <tr><td colspan="6" class="data-empty">{{ tr("No check-ins yet. Send #MeshtasticMonday on a Monday to join in.") }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% if leaderboard_pages > 1 %}
+<nav class="d-flex justify-content-center align-items-center gap-3 mb-3" aria-label="{{ tr("Monday leaderboard") }}">
+    {% if leaderboard_page > 1 %}<a class="mesh-secondary-button" href="?leaderboard_page={{ leaderboard_page - 1 }}&amp;page={{ page }}">{{ tr("Prev") }}</a>{% endif %}
+    <span class="small text-body-secondary">{{ tr("Page") }} {{ leaderboard_page }} / {{ leaderboard_pages }}</span>
+    {% if leaderboard_page < leaderboard_pages %}<a class="mesh-secondary-button" href="?leaderboard_page={{ leaderboard_page + 1 }}&amp;page={{ page }}">{{ tr("Next") }}</a>{% endif %}
+</nav>
+{% endif %}
+
+<h2 class="h5">{{ tr("Check-in log") }}</h2>
+<div class="data-table-wrap" role="region" aria-label="{{ tr("Monday check-in log") }}" tabindex="0">
+    <table>
+        <thead><tr><th scope="col">{{ tr("Local time") }}</th><th scope="col">{{ tr("Channel") }}</th><th scope="col">{{ tr("Node") }}</th><th scope="col">{{ tr("Message") }}</th></tr></thead>
+        <tbody>
+        {% for message in messages %}
+            <tr>
+                <td class="text-nowrap">{{ message.local_time }}</td>
+                <td>{{ message.channel or tr("Unknown") }}</td>
+                <td><a href="/node/{{ message.node_id }}">{{ message.long_name or '!%08x'|format(message.node_id) }}</a></td>
+                <td class="text-break">{{ message.text }}</td>
+            </tr>
+        {% else %}
+            <tr><td colspan="4" class="data-empty">{{ tr("No check-ins yet") }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% if page_count > 1 %}
+<nav class="d-flex justify-content-center align-items-center gap-3 mb-3" aria-label="{{ tr("Check-in log pages") }}">
+    {% if page > 1 %}<a class="mesh-secondary-button" href="?page={{ page - 1 }}&amp;leaderboard_page={{ leaderboard_page }}">{{ tr("Prev") }}</a>{% endif %}
+    <span class="small text-body-secondary">{{ tr("Page") }} {{ page }} / {{ page_count }}</span>
+    {% if page < page_count %}<a class="mesh-secondary-button" href="?page={{ page + 1 }}&amp;leaderboard_page={{ leaderboard_page }}">{{ tr("Next") }}</a>{% endif %}
+</nav>
+{% endif %}
+<p class="small text-body-secondary">{{ tr("Scores reflect the history retained in this database. The leaderboard refreshes within 30 seconds of a new check-in.") }}</p>
+{% endblock %}
