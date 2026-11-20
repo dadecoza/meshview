@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block theme %}light{% endblock %}
+{% block body_class %}mesh-data-page{% endblock %}
+{% block css %}{% include "data-page-styles.html" %}{% endblock %}
+
+{% block body %}
+<header class="data-heading">
+    <div>
+        <h1>{{ tr("MQTT Nodes") }}</h1>
+        {% if gateway %}
+        <p>{{ tr("Nodes uploaded by") }} <a href="/node/{{ gateway.node_id }}">{{ gateway.long_name or (gateway.node_id|node_id_to_hex) }}</a>.</p>
+        {% else %}
+        <p>{{ tr("Gateways that uploaded packets to MeshView, most recent first. Select a gateway to see the nodes it uploaded.") }}</p>
+        {% endif %}
+    </div>
+    {% if gateway %}
+    <a class="mesh-secondary-button" href="/mqtt-nodes">{{ tr("All MQTT nodes") }}</a>
+    {% else %}
+    <a class="mesh-secondary-button" href="/mqtt-nodes">{{ tr("Refresh") }}</a>
+    {% endif %}
+</header>
+<p class="small text-body-secondary">{{ tr("Counts cover packets retained by MeshView. Last upload shows when MeshView received a packet and does not indicate current broker session status.") }}</p>
+<p class="small text-body-secondary">{{ rows|length }} {{ tr("originating nodes") if gateway else tr("observed gateways") }}</p>
+<div class="data-table-wrap" role="region" aria-label="{{ tr('MQTT nodes') }}" tabindex="0">
+    <table>
+        <thead><tr>
+            <th scope="col">{{ tr("Originating node") if gateway else tr("MQTT gateway") }}</th>
+            <th scope="col">{{ tr("Hardware") }}</th>
+            <th scope="col">{{ tr("Role") }}</th>
+            {% if not gateway %}<th scope="col">{{ tr("Uploaded nodes") }}</th>{% endif %}
+            <th scope="col">{{ tr("Unique packets") }}</th>
+            <th scope="col">{{ tr("Last upload (UTC)") }}</th>
+        </tr></thead>
+        <tbody>
+        {% for node in rows %}
+        {% set node_hex = node.node_id|node_id_to_hex %}
+        <tr>
+            <td>
+                <a href="{{ '/node/' if gateway else '/mqtt-nodes/' }}{{ node.node_id }}">{{ node.long_name or node_hex }}</a>
+                {% if node.short_name and node.short_name != node.long_name %}<small class="text-body-secondary">({{ node.short_name }})</small>{% endif %}
+                {% if node.long_name %}<small class="d-block text-body-secondary">{{ node_hex }}</small>{% endif %}
+            </td>
+            <td>{{ node.hw_model or "—" }}</td>
+            <td>{{ node.role or "—" }}</td>
+            {% if not gateway %}<td>{{ node.sources }}</td>{% endif %}
+            <td>{{ node.packets }}</td>
+            <td class="text-nowrap">{% if node.last_upload %}<time datetime="{{ node.last_upload.isoformat() }}">{{ node.last_upload.strftime('%Y-%m-%d %H:%M:%S') }}</time>{% else %}—{% endif %}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="{{ 5 if gateway else 6 }}" class="data-empty">{{ tr("No MQTT uploads in the retained packet history.") }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

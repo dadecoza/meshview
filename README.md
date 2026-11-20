@@ -758,3 +758,7 @@ Open `/static/kiosk.html` or `/map?kiosk=1` for a fullscreen live map without th
 site header or footer. Kiosk mode shares the live map's layers, channel filters,
 packet activity, and compact node inspector. Map position parameters (`lat`, `lng`,
 and `zoom`) also work with kiosk mode.
+
+### MQTT Nodes
+
+See [MQTT Nodes](docs/MQTT-Nodes.md) for gateway attribution and deployment upgrade notes.

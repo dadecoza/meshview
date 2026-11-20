@@ -18,7 +18,17 @@ from markupsafe import Markup
 
 from meshtastic.protobuf.mesh_pb2 import Routing
 from meshtastic.protobuf.portnums_pb2 import PortNum
-from meshview import config, database, decode_payload, migrations, models, monday, store, traceroute
+from meshview import (
+    config,
+    database,
+    decode_payload,
+    migrations,
+    models,
+    monday,
+    mqtt_nodes,
+    store,
+    traceroute,
+)
 from meshview.__version__ import (
     __version_string__,
 )
@@ -384,6 +394,25 @@ async def meshtastic_monday(request):
             leaderboard_pages=leaderboard_pages,
         ),
         content_type='text/html',
+    )
+
+
+@routes.get("/mqtt-nodes")
+@routes.get("/mqtt-nodes/{gateway_id:[0-9]{1,10}}")
+async def mqtt_node_page(request):
+    gateway_id = request.match_info.get("gateway_id")
+    gateways = await mqtt_nodes.get_mqtt_nodes()
+    gateway = None
+    rows = gateways
+    if gateway_id is not None:
+        gateway_id = int(gateway_id)
+        gateway = next((node for node in gateways if node["node_id"] == gateway_id), None)
+        if gateway is None:
+            raise web.HTTPNotFound()
+        rows = await mqtt_nodes.get_mqtt_nodes(gateway_id)
+    return web.Response(
+        text=env.get_template("mqtt-nodes.html").render(rows=rows, gateway=gateway),
+        content_type="text/html",
     )
 
 

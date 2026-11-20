@@ -290,13 +290,13 @@ async function initializePage() {
         const menu = document.getElementById("site-menu");
         if (menu) {
             const items = ['<a href="/"' + (["/", "/index", "/index.html"].includes(location.pathname) ? ' class="active" aria-current="page"' : "") + '>' + escapeHtml(MeshI18n.t("Home")) + '</a>'];
-            const keys = ["nodes", "chat", "everything", "graphs", "net", "map", "stats", "top", "monday"];
-            const urls = ["/nodelist", "/chat", "/firehose", "/nodegraph", "/net", "/map", "/stats", "/top", "/monday"];
+            const keys = ["nodes", "chat", "everything", "graphs", "net", "map", "stats", "top", "monday", "mqtt_nodes"];
+            const urls = ["/nodelist", "/chat", "/firehose", "/nodegraph", "/net", "/map", "/stats", "/top", "/monday", "/mqtt-nodes"];
 
             for (let i = 0; i < keys.length; i++) {
                 const key = keys[i];
                 if (site[key] === "true" || site[key] === true) {
-                    items.push(`<a href="${urls[i]}"${(location.pathname === urls[i] || (key === "map" && location.pathname === "/map.html") || (key === "monday" && location.pathname === "/monday.html")) ? ' class="active" aria-current="page"' : ""}>${escapeHtml(dict[key] || (key === "everything" ? MeshI18n.t("Live Traffic") : key === "monday" ? "#MeshtasticMonday" : key))}</a>`);
+                    items.push(`<a href="${urls[i]}"${(location.pathname === urls[i] || (key === "map" && location.pathname === "/map.html") || (key === "monday" && location.pathname === "/monday.html") || (key === "mqtt_nodes" && location.pathname.startsWith("/mqtt-nodes/"))) ? ' class="active" aria-current="page"' : ""}>${escapeHtml(dict[key] || (key === "everything" ? MeshI18n.t("Live Traffic") : key === "monday" ? "#MeshtasticMonday" : key === "mqtt_nodes" ? MeshI18n.t("MQTT Nodes") : key))}</a>`);
                 }
             }
             if (site.api !== "false" && site.api !== false) {
